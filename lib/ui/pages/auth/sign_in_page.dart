@@ -1,9 +1,12 @@
 import 'package:chatapp_firebase/data/db/db_helper.dart';
 import 'package:chatapp_firebase/data/service/auth_service.dart';
+import 'package:chatapp_firebase/data/service/data_base_service.dart';
 import 'package:chatapp_firebase/data/utils/app_utils.dart';
 import 'package:chatapp_firebase/generated/assets.dart';
 import 'package:chatapp_firebase/ui/pages/auth/sign_up_page.dart';
 import 'package:chatapp_firebase/ui/pages/home/home.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -138,10 +141,14 @@ class _SignInPageState extends State<SignInPage> {
         password: _passwordController.text,
       )
           .then((value) async {
-        if (value) {
+        if (value == true) {
+          QuerySnapshot snapshot =
+              await DataBaseService(uid: FirebaseAuth.instance.currentUser!.uid)
+                  .gettingUserData(_emailController.text);
           await DBHelper.setUserAuthStatus(true);
           await DBHelper.setUserPasswordSf(_passwordController.text);
           await DBHelper.setUserEmailSf(_emailController.text);
+          await DBHelper.setUserNameSf(snapshot.docs[0]['fullName']);
           goReplaceToNextPage(context, const HomePage());
         } else {
           showSnackbar(value);
@@ -157,7 +164,7 @@ class _SignInPageState extends State<SignInPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(msg),
-        backgroundColor: Colors.grey.shade200,
+        backgroundColor: Colors.green,
         duration: Duration(milliseconds: 2500),
         action: SnackBarAction(label: "Ok", onPressed: () {}),
       ),

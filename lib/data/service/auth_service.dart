@@ -7,22 +7,20 @@ class AuthService {
 
 //sign in
   Future signInUserWithEmailAndPassword(
-      {required String email,
-        required String password}) async {
+      {required String email, required String password}) async {
     try {
       User? user = (await firebaseAuth.signInWithEmailAndPassword(
-          email: email, password: password))
+              email: email, password: password))
           .user;
 
       if (user != null) {
-
         return true;
       }
     } on FirebaseAuthException catch (e) {
-      print(e);
-      return e;
+      return e.message;
     }
   }
+
 // sign up
   Future registerUserWithEmailAndPassword(
       {required String email,
@@ -39,8 +37,7 @@ class AuthService {
         return true;
       }
     } on FirebaseAuthException catch (e) {
-      print(e);
-      return e;
+      return e.message;
     }
   }
 

@@ -20,6 +20,11 @@ class DataBaseService {
       'groups': [],
       'profilePic': '',
       'uid': uid
-      });
+    });
   }
+
+//getting User data
+
+  Future gettingUserData(String email) async =>
+      await userCollection.where('email', isEqualTo: email).get();
 }
