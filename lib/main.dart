@@ -1,6 +1,6 @@
 import 'package:chatapp_firebase/data/db/db_helper.dart';
 import 'package:chatapp_firebase/data/shared/constant.dart';
-import 'package:chatapp_firebase/ui/pages/auth/login_page.dart';
+import 'package:chatapp_firebase/ui/pages/auth/sign_in_page.dart';
 import 'package:chatapp_firebase/ui/pages/home/home.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
@@ -40,7 +40,7 @@ class _MyAppState extends State<MyApp> {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: _userHasAuth ? const HomePage() : const LoginPage(),
+      home: _userHasAuth ? const HomePage() : const SignInPage(),
     );
   }
 
@@ -54,7 +54,9 @@ class _MyAppState extends State<MyApp> {
   void getUserAuthStatus() async {
     await DBHelper.getUserAuthStatus().then((value) {
       if (value != null) {
-        _userHasAuth = value;
+        setState(() {
+          _userHasAuth = value;
+        });
       }
     });
   }

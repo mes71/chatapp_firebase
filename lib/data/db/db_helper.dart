@@ -5,8 +5,29 @@ class DBHelper {
   static const String userLoggedInKey = 'LOGGEDINKEY';
   static const String userNameKey = 'USERNAMEKEY';
   static const String userEmailKey = 'USEREMAILKEY';
+  static const String userPasswordKey = 'USERPASSWORDKEY';
 
 // write data to SF
+  static Future<bool?> setUserAuthStatus(bool hasAuthed) async {
+    SharedPreferences sf = await SharedPreferences.getInstance();
+    return await sf.setBool(userLoggedInKey, hasAuthed);
+  }
+
+  static Future<bool?> setUserNameSf(String username) async {
+    SharedPreferences sf = await SharedPreferences.getInstance();
+    return await sf.setString(userNameKey, username);
+  }
+
+  static Future<bool?> setUserPasswordSf(String password) async {
+    SharedPreferences sf = await SharedPreferences.getInstance();
+    return await sf.setString(userPasswordKey, password);
+  }
+
+  static Future<bool?> setUserEmailSf(String email) async {
+    SharedPreferences sf = await SharedPreferences.getInstance();
+    return await sf.setString(userEmailKey, email);
+  }
+
 
 //read data to SF
 
