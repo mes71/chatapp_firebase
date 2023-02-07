@@ -28,11 +28,25 @@ class DBHelper {
     return await sf.setString(userEmailKey, email);
   }
 
-
 //read data to SF
 
   static Future<bool?> getUserAuthStatus() async {
     SharedPreferences sf = await SharedPreferences.getInstance();
     return sf.getBool(userLoggedInKey);
+  }
+
+  static Future<String?> getUserNameSf() async {
+    SharedPreferences sf = await SharedPreferences.getInstance();
+    return sf.getString(userNameKey);
+  }
+
+  static Future<String?> getUserPasswordSf() async {
+    SharedPreferences sf = await SharedPreferences.getInstance();
+    return sf.getString(userPasswordKey);
+  }
+
+  static Future<String?> getUserEmailSf() async {
+    SharedPreferences sf = await SharedPreferences.getInstance();
+    return sf.getString(userEmailKey);
   }
 }
