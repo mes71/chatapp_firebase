@@ -1,9 +1,11 @@
 import 'package:chatapp_firebase/data/db/db_helper.dart';
 import 'package:chatapp_firebase/data/service/auth_service.dart';
+import 'package:chatapp_firebase/data/service/data_base_service.dart';
 import 'package:chatapp_firebase/data/utils/app_utils.dart';
 import 'package:chatapp_firebase/ui/pages/auth/sign_in_page.dart';
 import 'package:chatapp_firebase/ui/pages/profile/profile_page.dart';
 import 'package:chatapp_firebase/ui/pages/search/search_button.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -18,6 +20,9 @@ class _HomePageState extends State<HomePage> {
   AuthService authService = AuthService();
   String userName = "";
   String email = "";
+  String groupName = "";
+  bool _isLoading = false;
+  Stream? groups;
 
   @override
   void initState() {
@@ -39,13 +44,7 @@ class _HomePageState extends State<HomePage> {
               icon: Icon(CupertinoIcons.search))
         ],
       ),
-      body: Center(
-        child: ElevatedButton(
-            onPressed: () {
-              authService.signOut();
-            },
-            child: Text('SignOut')),
-      ),
+      body: groupList(),
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.symmetric(vertical: 50),
@@ -116,8 +115,11 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-      floatingActionButton:
-          FloatingActionButton(onPressed: () {}, child: Icon(Icons.chat)),
+      floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            popUpDialog(context);
+          },
+          child: Icon(CupertinoIcons.add)),
     );
   }
 
@@ -128,5 +130,136 @@ class _HomePageState extends State<HomePage> {
     await DBHelper.getUserEmailSf().then((value) => setState(() {
           email = value!;
         }));
+
+    await DataBaseService(uid: FirebaseAuth.instance.currentUser!.uid)
+        .getUserGroups()
+        .then((snapshot) {
+      setState(() {
+        groups = snapshot;
+      });
+    });
+  }
+
+  groupList() {
+    return StreamBuilder(
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          if (snapshot.data['groups'] != null) {
+            if (snapshot.data['groups'].length != 0) {
+              return ListView.builder(
+                itemBuilder: (context, index) {
+                  var groupInfo =
+                      snapshot.data['groups'][index].toString().split('_');
+                  return getGroupTile(
+                      groupName: groupInfo.last,
+                      groupId: groupInfo.first,
+                      fullName: snapshot.data['fullName']);
+                },
+                itemCount: snapshot.data['groups'].length,
+              );
+            } else {
+              return Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(CupertinoIcons.chat_bubble_text),
+                    Text('Empty Groups')
+                  ],
+                ),
+              );
+            }
+          } else {
+            return Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(CupertinoIcons.chat_bubble_text),
+                  Text('Empty Groups')
+                ],
+              ),
+            );
+          }
+        } else {
+          return Center(
+            child: CircularProgressIndicator(),
+          );
+        }
+      },
+      stream: groups,
+    );
+  }
+
+  void popUpDialog(BuildContext context) {
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Create a Group',
+          textAlign: TextAlign.left,
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _isLoading
+                ? Center(
+                    child: CircularProgressIndicator(),
+                  )
+                : TextField(
+                    onChanged: (value) {
+                      setState(() {
+                        groupName = value;
+                      });
+                    },
+                    decoration: InputDecoration(border: OutlineInputBorder()),
+                  )
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel')),
+          ElevatedButton(
+              onPressed: () {
+                if (groupName != '') {
+                  setState(() {
+                    _isLoading = true;
+                  });
+
+                  DataBaseService(uid: FirebaseAuth.instance.currentUser!.uid)
+                      .createGroup(userName,
+                          FirebaseAuth.instance.currentUser!.uid, groupName)
+                      .whenComplete(() => _isLoading = false);
+
+                  Navigator.pop(context);
+                  showModalBottomSheet(
+                      context: context,
+                      builder: (context) =>
+                          Text('$groupName created successfully'));
+                }
+              },
+              child: Text('Create')),
+        ],
+      ),
+    );
+  }
+
+  Widget getGroupTile(
+      {required String groupName,
+      required String groupId,
+      required String fullName}) {
+    return ListTile(
+      leading: CircleAvatar(
+        backgroundColor: Colors.green,
+        foregroundColor: Colors.white,
+        child: Text(groupName.substring(0, 1).toUpperCase()),
+      ),
+      title: Text(
+        groupName,
+        style: TextStyle(fontWeight: FontWeight.w600),
+      ),
+    );
   }
 }
